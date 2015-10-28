@@ -14,11 +14,27 @@ classdef decisiontree
                 %binary targets
                dec_tree = struct(op,[],kids,[],class,binary_targets(1));
            else if isempty(attributes)
-               dec_tree = struct(op,[],kids,[],class,
-                                   maxOccuringValue(binary_targets));
+               dec_tree = struct(op,[],kids,[],class,maxOccuringValue(binary_targets));
+               else
+                   best_at = chooseBestAttribute(examples,binary_targets);
+                   at_name = attributes(best_at);
+                   dec_tree = struct(op,at_name,kids,kids,class,[]);
+                   subsets = splitbyAttributes(example,best_at,binary_targets);
+                   for i = 1 : 2
+                    if isEmpty(subsets(i,1))
+                        val = maxOccuringValue(binary_targets);
+                        leaf = struct(op,[],kids,[],class,val);
+                        dec_tree.kids = [dec_tree.kids leaf];
+                    else
+                        attributes(best_at) = [];
+                        subtree = decision_tree_learning(subsets(i,1),attributes,subsets(i,2));
+                        dec_tree.kids = [dec_tree.kids subtree];
+                    end
+                   end
                end
            end
         end        
+        
         function entropy = binary_entropy(p,n)
             if p + n > 0
                 entropy = (p/(p+n))*log2(p/(p+n));
@@ -28,6 +44,7 @@ classdef decisiontree
                 entropy = 0;
             end
         end
+        
         function att_entr = remainder(p0,n0,p1,n1,p,n)
             if p+n > 0
                 att_entr = binary_entropy(p0,n0)*(p0+n0)/(p+n);
@@ -36,22 +53,24 @@ classdef decisiontree
                 att_entr = 0;
             end
         end
-        function best_at = chooseBestAttribute(examples,attribute,binary_targets)
+        
+        function best_at = chooseBestAttribute(examples,binary_targets)
             p,n = countTargets(binary_targets);
             en = binary_entropy(p,n);
             best_at = 0;
             best_gain = 0;
-            init = false;
             for i = 1 : length(examples)
                 p0,p1,n0,n1 = getAttributeCounts(examples(:,i),binary_targets);
                 cur_rem = remainder(p0,n0,p1,n1,p,n);
                 cur_gain = en - cur_rem;
-                if cur_gain > best_gain or not init
+                if cur_gain > best_gain 
+                    or i == 1
                     best_at = i;
                     best_gain = cur_gain;
                 end
             end
         end
+        
         function counts = getAttributeCounts(attrCol,bin_target)
             p0 = 0;
             p1 = 0;
@@ -71,16 +90,19 @@ classdef decisiontree
                     n0 = n0 + 1;
                 end
             end
-            counts = p0,p1,n0,n1;
+            counts = [p0 p1 n0 n1];
         end
+        
         function targets = countTargets(binary_targets)
            pos = sum(binary_targets == 1);
            neg = length(binary_targets) - pos;
-           targets = pos,neg; %check this
+           targets = [pos neg]; %check this
         end
+        
         function target = maxOccuringValue(binary_targets)
             target = mode(binary_targets);
         end
+        
         function isSame = isAllValuesSame(binary_targets)
             row = size(binary_targets,1);
             if row > 0
@@ -89,6 +111,7 @@ classdef decisiontree
                 isSame = false;
             end
         end
+        
         function subsets = splitbyAttribute(examples,attribute,binary_targets)
             e0 = examples(:,:);
             e1 = examples(:,:);
@@ -103,7 +126,7 @@ classdef decisiontree
                     b1(i) = [];
                 end
             end
-            subsets = [e0;e1;b0;b1];
+            subsets = [e0 b0;e1 b1];
         end
     end
 end
