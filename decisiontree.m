@@ -1,6 +1,6 @@
 
-function [e,f,g,h] = decisiontree(a,b,c)
-[e,f,g,h] = splitbyAttribute(a,b,c);
+function tree = decisiontree(a,b,c)
+tree = decision_tree_learning(a,b,c);
 
     function dec_tree = decision_tree_learning(examples,attributes,binary_targets)
         op = 'op';
@@ -15,16 +15,16 @@ function [e,f,g,h] = decisiontree(a,b,c)
             else
                 best_at = chooseBestAttribute(examples,binary_targets);
                 at_name = attributes(best_at);
-                dec_tree = struct(op,at_name,kids,kids,class,[]);
-                subsets = splitbyAttributes(example,best_at,binary_targets);
-                for i = 1 : 2
-                    if isEmpty(subsets(i,1))
+                dec_tree = struct(op,at_name,kids,[],class,[]);
+                for i = 0 : 1
+                    [e1,b1] = splitbyAttributeValue(examples,best_at,i,binary_targets); 
+                    if isempty(e1)
                         val = maxOccuringValue(binary_targets);
                         leaf = struct(op,[],kids,[],class,val);
                         dec_tree.kids = [dec_tree.kids leaf];
                     else
                         attributes(best_at) = [];
-                        subtree = decision_tree_learning(subsets(i,1),attributes,subsets(i,2));
+                        subtree = decision_tree_learning(e1,attributes,b1);
                         dec_tree.kids = [dec_tree.kids subtree];
                     end
                 end
@@ -130,4 +130,18 @@ function [e,f,g,h] = decisiontree(a,b,c)
             end
         end
     end
+    function [e0, b0] = splitbyAttributeValue(examples,attribute,value,binary_targets)
+        e0 = examples(:,:);
+        b0 = binary_targets(:);
+        indexshift = 0;
+        for i = 1:size(examples,1)
+            if examples(i,attribute) ~= value
+                e0(i-indexshift,:) = [];
+                b0(i-indexshift) = [];
+                indexshift = indexshift + 1;
+            end
+        end
+        e0(:,attribute) = [];
+    end
+
 end
