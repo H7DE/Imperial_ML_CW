@@ -11,19 +11,20 @@ tree = decision_tree_learning(a,b,c);
             %binary targets
             dec_tree = struct(op,[],kids,[],class,binary_targets(1));
         else if isempty(attributes)
-                dec_tree = struct(op,[],kids,[],class,maxOccuringValue(binary_targets));
+                max = maxOccuringValue(binary_targets);
+                dec_tree = struct(op,[],kids,[],class,max);
             else
                 best_at = chooseBestAttribute(examples,binary_targets);
                 at_name = attributes(best_at);
                 dec_tree = struct(op,at_name,kids,[],class,[]);
+                attributes(best_at) = [];
                 for i = 0 : 1
                     [e1,b1] = splitbyAttributeValue(examples,best_at,i,binary_targets); 
                     if isempty(e1)
-                        val = maxOccuringValue(binary_targets);
-                        leaf = struct(op,[],kids,[],class,val);
+                        maxval = maxOccuringValue(b1); %check if we use b1 or binary_target
+                        leaf = struct(op,[],kids,[],class,maxval);
                         dec_tree.kids = [dec_tree.kids leaf];
                     else
-                        attributes(best_at) = [];
                         subtree = decision_tree_learning(e1,attributes,b1);
                         dec_tree.kids = [dec_tree.kids subtree];
                     end
