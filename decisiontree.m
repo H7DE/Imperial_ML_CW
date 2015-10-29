@@ -1,6 +1,6 @@
 
-function val = decisiontree(a,b)
-val = binary_entropy(a,b);
+function [e,f,g,h] = decisiontree(a,b,c)
+[e,f,g,h] = splitbyAttribute(a,b,c);
 
     function dec_tree = decision_tree_learning(examples,attributes,binary_targets)
         op = 'op';
@@ -44,7 +44,9 @@ val = binary_entropy(a,b);
         entropy = -1 * entropy;
     end
 
-    function att_entr = remainder(p0,n0,p1,n1,p,n)
+    function att_entr = remainder(p0,n0,p1,n1)
+        p = p0 + p1;
+        n = n0 + n1;
         if p+n > 0
             att_entr = binary_entropy(p0,n0)*(p0+n0)/(p+n);
             att_entr = att_entr + binary_entropy(p1,n1)*(p1+n1)/(p+n);
@@ -53,24 +55,24 @@ val = binary_entropy(a,b);
         end
     end
 
+%choose best attribute to choose to split on
     function best_at = chooseBestAttribute(examples,binary_targets)
-        p,n = countTargets(binary_targets);
+        [p, n] = countTargets(binary_targets);
         en = binary_entropy(p,n);
         best_at = 0;
         best_gain = 0;
-        for i = 1 : length(examples)
-            p0,p1,n0,n1 = getAttributeCounts(examples(:,i),binary_targets);
-            cur_rem = remainder(p0,n0,p1,n1,p,n);
+        for i = 1 : size(examples,2)
+            [p0,p1,n0,n1] = getAttributeCounts(examples(:,i),binary_targets);
+            cur_rem = remainder(p0,n0,p1,n1);
             cur_gain = en - cur_rem;
-            if cur_gain > best_gain
-                or i == 1
+            if cur_gain > best_gain || i == 1
                 best_at = i;
                 best_gain = cur_gain;
             end
         end
     end
 
-    function counts = getAttributeCounts(attrCol,bin_target)
+    function [p0 ,p1 ,n0 ,n1] = getAttributeCounts(attrCol,bin_target)
         p0 = 0;
         p1 = 0;
         n0 = 0;
@@ -89,13 +91,11 @@ val = binary_entropy(a,b);
                 n0 = n0 + 1;
             end
         end
-        counts = [p0 p1 n0 n1];
     end
 
-    function targets = countTargets(binary_targets)
+    function [pos, neg] = countTargets(binary_targets)
         pos = sum(binary_targets == 1);
         neg = length(binary_targets) - pos;
-        targets = [pos neg]; %check this
     end
 
     function target = maxOccuringValue(binary_targets)
@@ -111,20 +111,23 @@ val = binary_entropy(a,b);
         end
     end
 
-    function subsets = splitbyAttribute(examples,attribute,binary_targets)
+    function [e0, b0, e1, b1] = splitbyAttribute(examples,attribute,binary_targets)
         e0 = examples(:,:);
         e1 = examples(:,:);
         b0 = binary_targets(:);
         b1 = binary_targets(:);
+        index0 = 0;
+        index1 = 0;
         for i = 1:size(examples,1)
-            if example(i,attribute) == 0
-                e0(i,:) = [];
-                b0(i) = [];
+            if examples(i,attribute) == 0
+                e0(i-index0,:) = [];
+                b0(i-index0) = [];
+                index0 = index0 + 1;
             else
-                e1(i,:) = [];
-                b1(i) = [];
+                e1(i-index1,:) = [];
+                b1(i-index1) = [];
+                index1 = index1 + 1;
             end
         end
-        subsets = [e0 b0;e1 b1];
     end
 end
