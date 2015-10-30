@@ -14,14 +14,14 @@ tree = decision_tree_learning(a,b,c);
                 max = maxOccuringValue(binary_targets);
                 dec_tree = struct(op,[],kids,[],class,max);
             else
-                best_at = chooseBestAttribute(examples,binary_targets);
-                at_name = attributes(best_at);
+                [at_ind,best_at]= chooseBestAttribute(examples,attributes,binary_targets);
+                at_name = attributes(at_ind);
                 dec_tree = struct(op,at_name,kids,[],class,[]);
-                attributes(best_at) = [];
+                attributes(at_ind) = [];
                 for i = 0 : 1
                     [e1,b1] = splitbyAttributeValue(examples,best_at,i,binary_targets); 
                     if isempty(e1)
-                        maxval = maxOccuringValue(b1); %check if we use b1 or binary_target
+                        maxval = maxOccuringValue(binary_targets);
                         leaf = struct(op,[],kids,[],class,maxval);
                         dec_tree.kids = [dec_tree.kids leaf];
                     else
@@ -57,17 +57,19 @@ tree = decision_tree_learning(a,b,c);
     end
 
 %choose best attribute to choose to split on
-    function best_at = chooseBestAttribute(examples,binary_targets)
+    function [at_ind,best_at]= chooseBestAttribute(examples,attributes,binary_targets)
         [p, n] = countTargets(binary_targets);
         en = binary_entropy(p,n);
         best_at = 0;
         best_gain = 0;
-        for i = 1 : size(examples,2)
-            [p0,p1,n0,n1] = getAttributeCounts(examples(:,i),binary_targets);
+        for i = 1 : size(attributes,2)
+            index = getIndex(attributes(i));
+            [p0,p1,n0,n1] = getAttributeCounts(examples(:,index),binary_targets);
             cur_rem = remainder(p0,n0,p1,n1);
             cur_gain = en - cur_rem;
             if cur_gain > best_gain || i == 1
-                best_at = i;
+                at_ind = i;
+                best_at = index;
                 best_gain = cur_gain;
             end
         end
@@ -111,26 +113,6 @@ tree = decision_tree_learning(a,b,c);
             isSame = false;
         end
     end
-
-    function [e0, b0, e1, b1] = splitbyAttribute(examples,attribute,binary_targets)
-        e0 = examples(:,:);
-        e1 = examples(:,:);
-        b0 = binary_targets(:);
-        b1 = binary_targets(:);
-        index0 = 0;
-        index1 = 0;
-        for i = 1:size(examples,1)
-            if examples(i,attribute) == 0
-                e0(i-index0,:) = [];
-                b0(i-index0) = [];
-                index0 = index0 + 1;
-            else
-                e1(i-index1,:) = [];
-                b1(i-index1) = [];
-                index1 = index1 + 1;
-            end
-        end
-    end
     function [e0, b0] = splitbyAttributeValue(examples,attribute,value,binary_targets)
         e0 = examples(:,:);
         b0 = binary_targets(:);
@@ -142,7 +124,6 @@ tree = decision_tree_learning(a,b,c);
                 indexshift = indexshift + 1;
             end
         end
-        e0(:,attribute) = [];
     end
 
 end
