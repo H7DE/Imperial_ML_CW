@@ -1,9 +1,9 @@
-function conf = createFolds(x,y,folds)
+function confs = createFolds(x,y,folds)
     start = 1;
     n = size(x,1);
     rem = mod(n,folds);
     sz = floor(n / folds);
-    conf = zeros(6,6);
+    confs = cell(1,folds);
     for i = 1:folds
         if i <= rem
            xi = x(start:start+sz,:); %test set
@@ -22,7 +22,7 @@ function conf = createFolds(x,y,folds)
            y_t(start:start+sz-1,:)=[];
            start = start + sz;
         end
-        conf = perform_validation(xi,yi,x_t,y_t,conf);
+        confs{i} = perform_validation(xi,yi,x_t,y_t);
     end
 end
 
