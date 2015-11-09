@@ -1,6 +1,6 @@
 function class = classify(T,potential_classes)
 % chooses a suitable class given the potential_classes that the data satisfied
-bool = false;
+bool = true;
 if bool %gives preference to balanced trees
     clone_classes = potential_classes;
     j = 0;
@@ -20,8 +20,8 @@ else  %gives preference to shorter trees
 end
     function treesizes = sizes(T)
         treesizes = zeros(1,size(T,1));
-        for i = 1 : size(T,1)
-            treesizes(i) = getTreeSize(T(i));
+        for k = 1 : size(T,1)
+            treesizes(k) = getTreeSize(T(k));
         end
     end
     function treesize = getTreeSize(T)
@@ -34,8 +34,8 @@ end
     function probs = getProb(values)
         total = sum(values);
         probs = zeros(1,length(values));
-        for i = 1:length(values)
-            probs(i) = values(i)/total+eps;
+        for n = 1:length(values)
+            probs(n) = values(n)/total+eps;
         end
     end
     function isBalanced = isTreeBal(tree)
